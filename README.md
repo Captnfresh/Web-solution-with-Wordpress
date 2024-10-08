@@ -179,6 +179,7 @@ e) To Write changes to the disk, Once the partition is created, type w
     sudo blkid
     sudo vi /etc/fstab
     ```
+    image 10
 
 21. Verify that the setup is successful:
 
@@ -194,6 +195,118 @@ Launch a second RedHat EC2 instance that will have a role - 'DB Server' Repeat t
 Repeat the whole process for the webserver but instead of apps-lv, use db-lv and mount it to /db directory instead of /var/www/html/.
 
 ## Step 3 - Install Wordpress on your webserver.
+
+1. Update the package repository:
+
+   ```
+   sudo yum -y update
+   ```
+
+2. Install required packages:
+
+   ```
+    sudo yum -y install wget httpd php php-mysqlnd php-fpm php-json
+   ```
+
+3. Enable and start the Apache web server:
+
+   ```
+   sudo systemctl enable httpd
+   sudo systemctl start httpd
+   ```
+
+4. Install additional PHP dependencies:
+
+   ```
+   sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+   sudo yum install yum-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm
+   sudo yum module list php
+   sudo yum module reset php
+   sudo yum module enable php:remi-7.4
+   sudo yum install php php-opcache php-gd php-curl php-mysqlnd
+   sudo systemctl start php-fpm
+   sudo systemctl enable php-fpm
+   ```
+
+5. Allow Apache to execute PHP code:
+
+   ```
+   sudo setsebool -P httpd_execmem 1
+   sudo systemctl restart httpd
+   ```
+
+6. Download and install WordPress:
+
+   ```
+   mkdir wordpress
+   cd wordpress
+   sudo wget http://wordpress.org/latest.tar.gz
+   sudo tar -xzvf latest.tar.gz
+   sudo rm -rf latest.tar.gz
+   ```
+
+7. Copy the Configuration File: WordPress comes with a sample configuration file that you need to copy and rename. This file will be used to configure your database settings.
+
+   ```
+   sudo cp wordpress/wp-config-sample.php wordpress/wp-config.php
+   ```
+
+8. Move WordPress Files to the Web Root Directory: Finally, copy the entire WordPress directory into the web server’s root directory, which is typically located at /var/www/html/.
+
+   ```
+   sudo cp -R wordpress /var/www/html/
+   ```
+
+9. Change Ownership of the WordPress Directory
+
+    ```
+    sudo chown -R apache:apache /var/www/html/wordpress
+    ```
+
+10. Configure SELinux Context for WordPress Directory
+
+    ```
+    sudo chcon -t httpd_sys_rw_content_t /var/www/html/wordpress -R
+    ```
+
+11. Allow Apache to Connect to the Network
+
+    ```
+    sudo setsebool -P httpd_can_network_connect=1
+    ```
+
+
+
+
+## Step 4 - Install MySQL on the DB Ec2 Server.
+
+1. Install MySQL Server:
+
+   ```
+   sudo yum update
+   sudo yum install mysql-server
+   ```
+
+2. Enable and start the MySQL service:
+
+   ```
+   sudo systemctl enable mysqld
+   sudo systemctl start mysqld
+   ```
+
+3. Check if MySQL is running:
+
+   ```
+   sudo systemctl status mysqld
+   ```
+
+
+   
+### Step 5 - Configure the DB for wordpress
+
+
+
+   
 
 
 
