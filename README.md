@@ -15,7 +15,7 @@ Generally, web, or mobile solutions are implemented based on what is called the 
 
 ### Three-tier Architecture is a client-server software architecture pattern that comprise of 3 separate layers.
 
-image 1
+   ![image 1](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%201.jpg)
 
 1. Presentation Layer (PL): This is the user interface such as the client server or browser on laptop.
 2. Business Layer (BL): This is the backend program that implements business logic. Application or Webserver.
@@ -40,64 +40,64 @@ By now we should know how to spin up an EC2 instanse on AWS, In previous project
 
 1. Launch an EC2 instance that will serve as "Web Server" and Create 3 volumes in the same AZ as Web Server EC2, each of 10 GiB.
 
-   image 2
+   ![image 2](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%202.jpg)
 
-   image 3
+   ![image 3](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%203.jpg)
 
-   image 4
+   ![image 4](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%204.jpg)
 
-   image 5
+   ![image 5](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%205.jpg)
 
-   image 6
+   ![image 6](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%206.jpg)
 
-   image 7
+   ![image 7](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%207.jpg)
 
-2. Attach the three volumes one by one to your EC2 web server instance. You can do this from the AWS Management Console by selecting the instance and attaching the newly created volumes.
+3. Attach the three volumes one by one to your EC2 web server instance. You can do this from the AWS Management Console by selecting the instance and attaching the newly created volumes.
 
-3. Connect to your instance via ssh
+4. Connect to your instance via ssh
 
    ```
    ssh -i <key-pair-name> ec2-user@<ip-address>
    ```
 
-4. Check for the newly attached volumes. As seen above as /dev/xvdf, /dev/xvdg, and /dev/xvdh.
+5. Check for the newly attached volumes. As seen above as /dev/xvdf, /dev/xvdg, and /dev/xvdh.
 
    ```
    ls /dev/
    ```
 
-5. Check disk space:
+6. Check disk space:
 
    ```
    df -h
    ```
 
-6. Partition the Disks: Use `gdisk` utility to create a single partition on each of the 3 disks.
+7. Partition the Disks: Use `gdisk` utility to create a single partition on each of the 3 disks.
 
    ```
    sudo gdisk /dev/xvdf
    ```
 
-7. Create a new partition:
+8. Create a new partition:
 a) Type n to create a new partition. 
 b) Press Enter to select the default partition number 
 c) Press Enter to accept the default last sector. 
 d) Choose the partition type by typing 8300 for a Linux filesystem (ext4). 
 e) To Write changes to the disk, Once the partition is created, type w
 
-8. Install lvm2 package using `sudo yum install lvm2`. Run sudo lvmdiskscan command to check for available partitions.
+9. Install lvm2 package using `sudo yum install lvm2`. Run sudo lvmdiskscan command to check for available partitions.
 
    ```
      sudo yum install lvm2 -y
    ```
 
-9. Check available partitions with `lvmdiskscan`.
+10. Check available partitions with `lvmdiskscan`.
 
     ```
     sudo lvmdiskscan
     ```
 
-10. Create Physical Volumes by using `pvcreate` to mark the partitions as physical volumes:
+11. Create Physical Volumes by using `pvcreate` to mark the partitions as physical volumes:
 
     ```
     sudo pvcreate /dev/xvdf1
@@ -105,25 +105,25 @@ e) To Write changes to the disk, Once the partition is created, type w
     sudo pvcreate /dev/xvdh1
     ```
 
-11. Verify that Physical volume has been created successfully by running `sudo pvs`.
+12. Verify that Physical volume has been created successfully by running `sudo pvs`.
 
     ```
     sudo pvs
     ```
 
-12. Create a Volume Group (VG): Add all three PVs to a volume group (VG) named webdata-vg:
+13. Create a Volume Group (VG): Add all three PVs to a volume group (VG) named webdata-vg:
 
     ```
     sudo vgcreate webdata-vg /dev/xvdf1 /dev/xvdg1 /dev/xvdh1
     ```
 
-13. Verify that your VG has been created successfully by running:
+14. Verify that your VG has been created successfully by running:
 
     ```
      sudo vgs
     ```
 
-14. Create Logical Volumes (LVs): Create two logical volumes:
+15. Create Logical Volumes (LVs): Create two logical volumes:
 
     apps-lv using half of the VG size.
 
@@ -137,34 +137,34 @@ e) To Write changes to the disk, Once the partition is created, type w
     sudo lvcreate -n logs-lv -L 14G webdata-vg
     ```
 
-15. Confirm logical volumes creation by running:
+16. Confirm logical volumes creation by running:
 
     ```
     sudo lvs
     ```
 
-16. Verify the entire setup
+17. Verify the entire setup
 
     ```
     sudo vgdisplay -v 
     sudo lsblk
     ```
 
-17. Use mkfs.ext4 to format the logical volumes with ext4 filesystem
+18. Use mkfs.ext4 to format the logical volumes with ext4 filesystem
 
     ```
     sudo mkfs -t ext4 /dev/webdata-vg/apps-lv
     sudo mkfs -t ext4 /dev/webdata-vg/logs-lv
     ```
     
-18. Create directories for the web data and logs:
+19. Create directories for the web data and logs:
 
     ```
     sudo mkdir -p /var/www/html
     sudo mkdir -p /home/recovery/logs
     ```
 
-19. Mount the logical volumes to the directories:
+20. Mount the logical volumes to the directories:
 
     ```
     sudo mount /dev/webdata-vg/apps-lv /var/www/html/
@@ -173,21 +173,29 @@ e) To Write changes to the disk, Once the partition is created, type w
     sudo rsync -av /home/recovery/logs/ /var/log
     ```
 
-20. Update /etc/fstab so that the mount configuration persists after a server reboot:
+21. Update /etc/fstab so that the mount configuration persists after a server reboot:
 
     ```
     sudo blkid
     sudo vi /etc/fstab
     ```
-    image 10
+      ![image 8](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%208.jpg)
+   
+      ![image 9](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%209.jpg)
+    
 
-21. Verify that the setup is successful:
+      ![image 10](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%2010.jpg)
+
+
+23. Verify that the setup is successful:
 
     ```
     sudo mount -a
     sudo systemctl daemon-reload
     df -h
     ```
+
+
 
 ## Step 2 - Prepare the Database Server
 
@@ -300,7 +308,7 @@ Repeat the whole process for the webserver but instead of apps-lv, use db-lv and
    sudo systemctl status mysqld
    ```
 
-   image 11
+   ![image 11](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%2011.jpg)
 
 
    
@@ -323,11 +331,11 @@ Repeat the whole process for the webserver but instead of apps-lv, use db-lv and
    exit;
    ```
 
-   image 12
+   ![image 12](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%2012.jpg)
 
 3. Modify the inbound rules for the DB server security group to allow MySQL connections (port 3306) only from the Web Server's private IP. For extra security, restrict access using /32 CIDR notation.
 
-   image 13
+   ![image 13](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%2013.jpg)
 
 
    
@@ -351,7 +359,7 @@ Repeat the whole process for the webserver but instead of apps-lv, use db-lv and
     SHOW DATABASES;
     ```
 
-    image 14
+   ![image 14](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%2014.jpg)
     
 4. Edit the wp-config.php file located in /var/www/html/wordpress to include the database credentials using:
 
@@ -374,11 +382,11 @@ Repeat the whole process for the webserver but instead of apps-lv, use db-lv and
    http://<Web-Server-Public-IP-Address>/wordpress/
    ```
 
-   image 15
+   ![image 15](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%2015.jpg)
 
 7. Follow the on-screen instructions to complete the WordPress setup:
   
-   image 16
+   ![image 16](https://github.com/Captnfresh/Web-solution-with-Wordpress/blob/main/3%20tier%20web%20app/image%2016.jpg)
 
    
 
@@ -386,8 +394,67 @@ Repeat the whole process for the webserver but instead of apps-lv, use db-lv and
 
 This project demonstrates the successful implementation of a scalable and robust web solution using WordPress, the world's most popular content management system. By leveraging Amazon Web Services (AWS) EC2 instances, we've created a flexible and powerful hosting environment for WordPress.
 
+## Key Achievements
+
+1. **Successful Setup of Three-Tier Architecture**:
+   - Configured a web server, application server, and database server for a robust application environment.
+
+2. **Efficient Storage Management**:
+   - Implemented Logical Volume Management (LVM) for flexible and scalable storage, allowing for easy resizing and management of disk space.
+
+3. **Deployment of WordPress**:
+   - Installed and configured WordPress as a content management system, showcasing the ability to create and manage web applications.
+
+4. **Partitioning and Volume Group Creation**:
+   - Successfully partitioned block instances and created volume groups to optimize storage utilization.
+
+5. **Error Handling and Troubleshooting**:
+   - Developed problem-solving skills by overcoming various challenges during the setup process, such as configuration issues and permissions errors.
+
+6. **Documentation and Version Control**:
+   - Documented the entire process on GitHub, enhancing skills in version control and providing a reference for future projects.
 
 
+## Likely Errors and Solutions
+
+1. **Error: “Error establishing a database connection”**
+   - **Cause**: This can occur due to incorrect database credentials, database service not running, or network issues.
+   - **Solution**: 
+     - Verify database credentials in the `wp-config.php` file.
+     - Check if the MySQL/MariaDB service is running using `sudo systemctl status mysql` or `sudo systemctl status mariadb`.
+     - Ensure that the security group settings in AWS allow traffic on port 3306.
+
+2. **Error: “Failed to start mysql.service: Unit mysql.service not found”**
+   - **Cause**: MySQL may not be installed or the service may not be configured correctly.
+   - **Solution**: 
+     - Install MySQL using the appropriate package manager (`yum install mysql-server` for RedHat).
+     - Ensure the service is enabled and started with `sudo systemctl enable mysql` and `sudo systemctl start mysql`.
+
+3. **Error: “Access denied for user 'root'@'localhost'”**
+   - **Cause**: Incorrect password or user permissions.
+   - **Solution**: 
+     - Reset the root password using the command line by starting MySQL in safe mode.
+     - Grant appropriate permissions to the user by executing the necessary GRANT commands after logging in.
+
+4. **Error: “Physical volume is already in volume group”**
+   - **Cause**: Attempting to add an existing physical volume to a volume group.
+   - **Solution**: 
+     - Use the `vgreduce` command to remove the volume from the group if necessary or check the existing configuration with `vgs` and `pvs` to ensure the correct volumes are being used.
+
+5. **Error: “Command not found” when using `apt` or `yum`**
+   - **Cause**: The package manager may not be installed or recognized due to system misconfiguration.
+   - **Solution**: 
+     - Ensure you are using the correct package manager for your distribution (e.g., `yum` for RedHat).
+     - Check the system’s PATH variable and configuration to ensure proper setup.
+
+6. **Error: “Insufficient storage space” when creating logical volumes**
+   - **Cause**: Not enough free space in the volume group to allocate to a new logical volume.
+   - **Solution**: 
+     - Check available space using `vgs` or `lvs`.
+     - Consider resizing existing volumes or adding more physical volumes to the volume group.
+
+
+### By documenting these achievements and challenges, I am not tracking just my progress but also creating a valuable resource for others who may encounter similar issues. 
    
 
 
