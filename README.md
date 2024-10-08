@@ -300,9 +300,91 @@ Repeat the whole process for the webserver but instead of apps-lv, use db-lv and
    sudo systemctl status mysqld
    ```
 
+   image 11
+
 
    
-### Step 5 - Configure the DB for wordpress
+## Step 5 - Configure the DB for wordpress
+
+1. Login to MySQL:
+
+   ```
+   sudo mysql
+   ```
+
+2. Create the WordPress database and a user for the web server:
+
+   ```
+   CREATE DATABASE wordpress;
+   CREATE USER `myuser`@`<Web-Server-Private-IP-Address>` IDENTIFIED BY '<your-password>';
+   GRANT ALL ON wordpress.* TO 'myuser'@'<Web-Server-Private-IP-Address>';
+   FLUSH PRIVILEGES;
+   SHOW DATABASES;
+   exit;
+   ```
+
+   image 12
+
+3. Modify the inbound rules for the DB server security group to allow MySQL connections (port 3306) only from the Web Server's private IP. For extra security, restrict access using /32 CIDR notation.
+
+   image 13
+
+
+   
+## Step 6 - Configure WordPress to Connect to the Remote Database
+
+1. Install the MySQL client on the Web Server:
+
+   ```
+   sudo yum install mysql
+   ```
+
+2. Test if the Web Server can connect to the remote DB server:
+
+   ```
+   sudo mysql -u myuser -p -h <DB-Server-Private-IP-Address>
+   ```
+
+3. Verify the connection:
+
+    ```
+    SHOW DATABASES;
+    ```
+
+    image 14
+    
+4. Edit the wp-config.php file located in /var/www/html/wordpress to include the database credentials using:
+
+   ```
+   sudo vi /var/www/html/wordpress/wp-config.php
+   ```
+
+5. Input the following:
+
+   ```
+      define('DB_NAME', 'wordpress');
+      define('DB_USER', 'myuser');
+      define('DB_PASSWORD', 'mypass.1');
+      define('DB_HOST', '<DB-Server-Private-IP-Address>');
+   ```
+      
+6. Access WordPress Setup from a Browser:
+
+   ```
+   http://<Web-Server-Public-IP-Address>/wordpress/
+   ```
+
+   image 15
+
+7. Follow the on-screen instructions to complete the WordPress setup:
+  
+   image 16
+
+   
+
+# CONCLUSION
+
+This project demonstrates the successful implementation of a scalable and robust web solution using WordPress, the world's most popular content management system. By leveraging Amazon Web Services (AWS) EC2 instances, we've created a flexible and powerful hosting environment for WordPress.
 
 
 
