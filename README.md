@@ -36,7 +36,7 @@ By now we should know how to spin up an EC2 instanse on AWS, In previous project
 
 
 
-## Prepare a Web Server
+## Step 1 - Prepare a Web Server
 
 1. Launch an EC2 instance that will serve as "Web Server" and Create 3 volumes in the same AZ as Web Server EC2, each of 10 GiB.
 
@@ -85,9 +85,115 @@ c) Press Enter to accept the default last sector.
 d) Choose the partition type by typing 8300 for a Linux filesystem (ext4). 
 e) To Write changes to the disk, Once the partition is created, type w
 
-   
+8. Install lvm2 package using `sudo yum install lvm2`. Run sudo lvmdiskscan command to check for available partitions.
 
-  
+   ```
+     sudo yum install lvm2 -y
+   ```
+
+9. Check available partitions with `lvmdiskscan`.
+
+    ```
+    sudo lvmdiskscan
+    ```
+
+10. Create Physical Volumes by using `pvcreate` to mark the partitions as physical volumes:
+
+    ```
+    sudo pvcreate /dev/xvdf1
+    sudo pvcreate /dev/xvdg1
+    sudo pvcreate /dev/xvdh1
+    ```
+
+11. Verify that Physical volume has been created successfully by running `sudo pvs`.
+
+    ```
+    sudo pvs
+    ```
+
+12. Create a Volume Group (VG): Add all three PVs to a volume group (VG) named webdata-vg:
+
+    ```
+    sudo vgcreate webdata-vg /dev/xvdf1 /dev/xvdg1 /dev/xvdh1
+    ```
+
+13. Verify that your VG has been created successfully by running:
+
+    ```
+     sudo vgs
+    ```
+
+14. Create Logical Volumes (LVs): Create two logical volumes:
+
+    apps-lv using half of the VG size.
+
+    ```
+    sudo lvcreate -n apps-lv -L 14G webdata-vg
+    ```
+
+    logs-lv using the remaining space.
+
+    ```
+    sudo lvcreate -n logs-lv -L 14G webdata-vg
+    ```
+
+15. Confirm logical volumes creation by running:
+
+    ```
+    sudo lvs
+    ```
+
+16. Verify the entire setup
+
+    ```
+    sudo vgdisplay -v 
+    sudo lsblk
+    ```
+
+17. Use mkfs.ext4 to format the logical volumes with ext4 filesystem
+
+    ```
+    sudo mkfs -t ext4 /dev/webdata-vg/apps-lv
+    sudo mkfs -t ext4 /dev/webdata-vg/logs-lv
+    ```
+    
+18. Create directories for the web data and logs:
+
+    ```
+    sudo mkdir -p /var/www/html
+    sudo mkdir -p /home/recovery/logs
+    ```
+
+19. Mount the logical volumes to the directories:
+
+    ```
+    sudo mount /dev/webdata-vg/apps-lv /var/www/html/
+    sudo rsync -av /var/log/ /home/recovery/logs/
+    sudo mount /dev/webdata-vg/logs-lv /var/log
+    sudo rsync -av /home/recovery/logs/ /var/log
+    ```
+
+20. Update /etc/fstab so that the mount configuration persists after a server reboot:
+
+    ```
+    sudo blkid
+    sudo vi /etc/fstab
+    ```
+
+21. Verify that the setup is successful:
+
+    ```
+    sudo mount -a
+    sudo systemctl daemon-reload
+    df -h
+    ```
+
+## Step 2 - Prepare the Database Server
+
+Launch a second RedHat EC2 instance that will have a role - 'DB Server' Repeat the same steps as for the Web Server, but instead of apps-lv create db-lv and mount it to /db directory instead of /var/www/html/.
+Repeat the whole process for the webserver but instead of apps-lv, use db-lv and mount it to /db directory instead of /var/www/html/.
+
+## Step 3 - Install Wordpress on your webserver.
 
 
 
